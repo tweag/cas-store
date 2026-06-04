@@ -1,0 +1,1 @@
+{ cachix.pull = [ "cas-store" ]; }

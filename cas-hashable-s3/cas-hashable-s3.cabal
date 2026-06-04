@@ -1,25 +1,23 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.7.
---
--- see: https://github.com/sol/hpack
-
 name:           cas-hashable-s3
 version:        1.0.1
 synopsis:       ContentHashable instances for S3 objects
 description:    Provides ContentHashable instances for S3 objects
 category:       Control
-homepage:       https://github.com/tweag/funflow#readme
-bug-reports:    https://github.com/tweag/funflow/issues
+homepage:       https://github.com/tweag/cas-store#readme
+bug-reports:    https://github.com/tweag/cas-store/issues
 author:         Tom Nielsen, Nicholas Clarke, Andreas Herrmann
 maintainer:     Matthias Meschede <matthias.meschede@tweag.io>
 license:        MIT
 license-file:   LICENSE
 build-type:     Simple
+tested-with:    GHC==9.14.1, GHC==9.12.4, GHC==9.10.3, GHC==9.8.4, GHC==9.6.7
 
 source-repository head
   type: git
-  location: https://github.com/tweag/funflow
+  location: https://github.com/tweag/cas-store
+  subdir: cas-hashable-s3
 
 library
   exposed-modules:

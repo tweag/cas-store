@@ -1,0 +1,48 @@
+name: Check and build using (Nix)
+
+on:
+  push:
+    branches:
+      - "*"
+    tags:
+      - "v*.*.*"
+  pull_request:
+    branches:
+      - "*"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+    build_and_test_nix:
+        strategy:
+          matrix:
+            os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest]
+            ghc: ["967", "984", "9103", "9122", "9141"]
+        name: Test and build canonical-ledger-state using Nix
+        runs-on: ${{ matrix.os }}
+        steps:
+        - name: git checkout
+          uses: actions/checkout@v6
+        - uses: cachix/install-nix-action@v31
+          with:
+            nix_path: nixpkgs=channel:nixos-unstable
+            extra_nix_config: |
+              experimental-features = nix-command flakes
+              accept-flake-config = true
+        - uses: cachix/cachix-action@v16
+          with:
+            name: cas-store
+            authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+        - name: Run `nix build`
+          run: |
+            nix build \
+              '.#"ghc${{ matrix.ghc }}:cas-store:lib:cas-store"' \
+              '.#"ghc${{ matrix.ghc }}:cas-hashable:lib:cas-hashable"' \
+              '.#"ghc${{ matrix.ghc }}:cas-hashable-s3:lib:cas-hashable-s3"'
+        - name: Run tests
+          run: |
+            current_system=$(nix eval --impure --expr 'builtins.currentSystem')
+            nix build \
+              ".#checks.${current_system}.ghc${{ matrix.ghc }}:cas-store:test:unit-tests"

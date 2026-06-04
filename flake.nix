@@ -19,17 +19,13 @@
     url = "github:numtide/treefmt-nix";
     inputs.nixpkgs.follows = "nixpkgs";
   };
-  outputs = { self, nixpkgs, flake-utils, haskellNix, git-hooks, treefmt-nix
-    , ... }:
-    let
-      supportedSystems =
-        [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
+  outputs =
+    { self, nixpkgs, flake-utils, haskellNix, git-hooks, treefmt-nix, ... }:
+    let supportedSystems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
     in flake-utils.lib.eachSystem supportedSystems (system:
       let
         pkgs = import nixpkgs {
-          overlays = [
-            haskellNix.overlay
-          ];
+          overlays = [ haskellNix.overlay ];
           inherit system;
           inherit (haskellNix) config;
         };
@@ -39,9 +35,8 @@
         supportedGhcVersions =
           [ "ghc967" "ghc984" "ghc9103" "ghc9122" "ghc9141" ];
 
-        project = import ./nix/project.nix {
-          inherit pkgs supportedGhcVersions referenceCDDLDir;
-        };
+        project =
+          import ./nix/project.nix { inherit pkgs supportedGhcVersions; };
 
         inherit (project) casStore;
 
@@ -49,9 +44,7 @@
 
         pre-commit-check = git-hooks.lib.${system}.run {
           src = ./.;
-          hooks = {
-            nixfmt-classic.enable = true;
-          };
+          hooks = { nixfmt-classic.enable = true; };
           tools = { };
         };
 
@@ -60,15 +53,6 @@
       in lib.recursiveUpdate flake {
         project = casStore;
         legacyPackages = { inherit casStore pkgs; };
-
-        checks = let
-          perGhcChecks = lib.listToAttrs (lib.concatMap (compiler-nix-name:
-            map (checkName: {
-              name = "${compiler-nix-name}:${checkName}";
-              value = overridePreCheck "${compiler-nix-name}:${checkName}"
-                testOverrides.${checkName};
-            }) (lib.attrNames testOverrides)) supportedGhcVersions);
-        in defaultChecks // perGhcChecks;
 
         devShells = let
           mkDevShells = p: {
@@ -81,16 +65,12 @@
               shellHook = old.shellHook + pre-commit-check.shellHook;
             });
           };
-        in mkDevShells cardanoCanonicalLedger // lib.listToAttrs (map
-          (compiler-nix-name:
-            let
-              p = cardanoCanonicalLedger.appendModule {
-                inherit compiler-nix-name;
-              };
-            in {
-              name = compiler-nix-name;
-              value = p.shell // (mkDevShells p);
-            }) supportedGhcVersions);
+        in mkDevShells casStore // lib.listToAttrs (map (compiler-nix-name:
+          let p = casStore.appendModule { inherit compiler-nix-name; };
+          in {
+            name = compiler-nix-name;
+            value = p.shell // (mkDevShells p);
+          }) supportedGhcVersions);
 
         formatter = treefmtEval.config.build.wrapper;
       });
@@ -98,9 +78,10 @@
   # --- Flake Local Nix Configuration ----------------------------
   nixConfig = {
     extra-substituters =
-      [ "https://cache.iog.io" ];
+      [ "https://cache.iog.io" "https://cas-store.cachix.org" ];
     extra-trusted-public-keys = [
       "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
+      "cas-store.cachix.org-1:beEHGP09EbXKd4dV9eyK3EpbEf8/rRmMB/e+OeTtIes="
     ];
     allow-import-from-derivation = "true";
   };
