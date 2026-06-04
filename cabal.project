@@ -1,0 +1,5 @@
+packages:
+  cas-store
+  cas-hashable
+  cas-hashable-s3
+  
