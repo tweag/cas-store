@@ -44,6 +44,7 @@ library
     , cryptonite
     , directory
     , filepath
+    , fsnotify
     , hashable >=1.4.1 && <1.5
     , hostname
     , lens >=5.2
@@ -58,19 +59,6 @@ library
     , unix
     , unliftio
   default-language: Haskell2010
-  if os(linux)
-    other-modules:
-        Data.CAS.ContentStore.Notify.Linux
-    cpp-options: -DOS_Linux
-    build-depends:
-        hinotify
-  else
-    if os(darwin) || os(freebsd)
-      other-modules:
-          Data.CAS.ContentStore.Notify.BSD
-      cpp-options: -DOS_BSD
-      build-depends:
-          kqueue
 
 test-suite unit-tests
   type: exitcode-stdio-1.0

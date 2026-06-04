@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE LambdaCase #-}
 
 -- | Generic file change notifier library for unix-based systems.
 --
@@ -19,10 +19,27 @@ module Data.CAS.ContentStore.Notify
   )
 where
 
-#ifdef OS_Linux
-import           Data.CAS.ContentStore.Notify.Linux
-#else
-#  ifdef OS_BSD
-import           Data.CAS.ContentStore.Notify.BSD
-#  endif
-#endif
+import System.FSNotify
+
+type Notifier = WatchManager
+
+initNotifier :: IO Notifier
+initNotifier = startManager
+
+killNotifier :: Notifier -> IO ()
+killNotifier = stopManager
+
+type Watch = StopListening
+
+addDirWatch :: Notifier -> FilePath -> IO () -> IO Watch
+addDirWatch inotify dir f = watchDir inotify dir defaultEvent (const f)
+  where
+    defaultEvent e@ModifiedAttributes{} = isDirectory e
+    defaultEvent e@Modified{} = isDirectory e 
+    defaultEvent e@Removed{} = isDirectory e
+    defaultEvent e@WatchedDirectoryRemoved{} = isDirectory e
+    defaultEvent _ = False
+    isDirectory = (IsDirectory==) . eventIsDirectory
+
+removeDirWatch :: Watch -> IO ()
+removeDirWatch w = w
