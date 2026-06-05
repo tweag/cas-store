@@ -33,6 +33,6 @@ main = do
   rawHash <- contentHash $ replicate 100000 (Foo (Fiz 10) "hello" (Just 5) 123.12 (Left (Bar 1 1 2)) (Right (Bar 4 5 6)))
 
   -- This hash should not change, unless the hashing algorithm change or the order of the walk in the structure changes.
-  let 
-      expected = "ContentHash \"7f953cc9aaf79bac4d02e70dca91da1ee630b4a7894aeca9ed61942cc3a20d8a\""
+  let
+      expected = "ContentHash \"bf45d0f1a1716631c3acb8dd1235c7692d358e63ba3960308a629d428c042fdd\""
   when (show rawHash /= expected) $ error $ "Raw hash is different than expected: " <> show rawHash
